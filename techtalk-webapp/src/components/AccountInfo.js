@@ -1,6 +1,8 @@
-import { Button, Descriptions } from 'antd';
+import { Button, Descriptions, Typography } from 'antd';
 import styled from 'styled-components';
 import Token from './Token';
+import useTechTalkService from '../hooks/useTechTalkService';
+import { useCallback } from 'react';
 
 const S = {
   Descriptions: styled(Descriptions)`
@@ -20,14 +22,31 @@ const S = {
 }
 
 function AccountInfo() {
+  const {hasWeb3, wallet, setAllowance } = useTechTalkService();
+
+  const handleSetAllowance = useCallback(async () => {
+    const allowance = window.prompt('Allowance:');
+    if (allowance !== null) {
+      await setAllowance(allowance);
+    }
+  }, [setAllowance]);
+
+  if (!hasWeb3) {
+    return (
+      <center>
+        <Typography.Text type="warning">You need to install Metamask or use a Web3 browser</Typography.Text>
+      </center>
+    );
+  }
+
   return (
     <S.Descriptions title="Your Wallet" size="small" bordered column={1}>
       <Descriptions.Item label="Balance">
-        <Token val={1810000000}/>
+        <Token val={wallet.balance}/>
       </Descriptions.Item>
       <Descriptions.Item label="Allowance">
-        <Token val={10000000}/>
-        <Button size="small" type="primary">Set allowance</Button>
+        <Token val={wallet.allowance}/>
+        <Button size="small" type="primary" onClick={handleSetAllowance}>Set allowance</Button>
       </Descriptions.Item>
     </S.Descriptions>
   );

@@ -1,7 +1,9 @@
-import { Descriptions, Layout } from 'antd';
+import { Descriptions, Layout, Spin } from 'antd';
 import styled from 'styled-components';
 import { Link, Outlet } from 'react-router-dom';
 import AccountInfo from './components/AccountInfo';
+import useTechTalkService from './hooks/useTechTalkService';
+import config from './config';
 
 const {Header, Footer, Content} = Layout;
 
@@ -71,6 +73,7 @@ const S = {
 }
 
 function App() {
+  const {hasWeb3, loading} = useTechTalkService();
   return (
     <Layout>
       <S.Header>
@@ -79,16 +82,18 @@ function App() {
           <S.HeaderTitle>Tech Talk Ticket</S.HeaderTitle>
         </Link>
       </S.Header>
-      <S.Content>
-        <AccountInfo />
-        <br/>
-        <Outlet />
-      </S.Content>
+      <Spin spinning={loading}>
+        <S.Content>
+          <AccountInfo />
+          <br/>
+          {hasWeb3 && (<Outlet />)}
+        </S.Content>
+      </Spin>
       <S.Footer>
         Token:&nbsp;
-        <a href={`/`} target="_blank" rel="noreferrer">TTC</a>
+        <a href={`${config.etherscanAddress}/token/${config.ttcAddress}`} target="_blank" rel="noreferrer">TTC</a>
         &nbsp;-&nbsp;
-        <a href={`/`} target="_blank" rel="noreferrer">TTT</a>
+        <a href={`${config.etherscanAddress}/token/${config.tttAddress}`} target="_blank" rel="noreferrer">TTT</a>
       </S.Footer>
     </Layout>
   );
