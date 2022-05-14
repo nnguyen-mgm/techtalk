@@ -1,6 +1,8 @@
 import { Button, PageHeader, Table } from 'antd';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import useTechTalkService from '../hooks/useTechTalkService';
 
 const S = {
   PageHeader: styled(PageHeader)`
@@ -10,17 +12,6 @@ const S = {
   `,
 }
 
-const events = [
-  {
-    id: 1,
-    name: 'Web3 Tech Talk by mgm',
-  },
-  {
-    id: 2,
-    name: 'Awesome Tech Talk by mgm',
-  },
-];
-
 const columns = [
   {
     title: 'Name',
@@ -29,7 +20,7 @@ const columns = [
   },
   {
     title: '',
-    dataIndex: 'address',
+    dataIndex: 'id',
     key: 'id',
     render: (id) =>
       <Link to={`/event/${id}`}>
@@ -39,6 +30,18 @@ const columns = [
 ];
 
 const CreatedEvents = () => {
+  const [loading, setLoading] = useState(false);
+  const [events, setEvents] = useState([]);
+  const {loadCreatedEvents} = useTechTalkService();
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      setEvents(await loadCreatedEvents() || []);
+      setLoading(false);
+    })();
+  }, [loadCreatedEvents]);
+
   return (
     <div>
       <S.PageHeader
@@ -48,7 +51,7 @@ const CreatedEvents = () => {
           <Link key="join-event" to="/"><Button type="primary">Join/Create event</Button></Link>,
         ]}
       >
-        <Table dataSource={events} columns={columns} pagination={false} size="middle"/>
+        <Table loading={loading} dataSource={events} columns={columns} pagination={false} size="middle"/>
       </S.PageHeader>
     </div>
   )

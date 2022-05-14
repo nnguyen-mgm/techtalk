@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CreatedEventsLabel from '../components/CreatedEventsLabel';
+import useTechTalkService from '../hooks/useTechTalkService';
 
 const S = {
   SearchContainer: styled.div`
@@ -49,12 +50,20 @@ const S = {
 }
 
 const Home = () => {
+  const [form] = Form.useForm();
   const [eventId, setEventId] = useState();
   const navigate = useNavigate();
+  const {eventCreationFee, createEvent} = useTechTalkService();
 
   const handleOnChangeEventId = useCallback((event) => {
     setEventId(event.target.value);
   }, []);
+
+  const onFinish = useCallback(async ({ name, maxTickets, startTime}) => {
+    if (await createEvent({ name, maxTickets, startTime})) {
+      navigate('/created-events');
+    }
+  }, [createEvent, navigate]);
 
   const handleGoToEvent = useCallback(() => {
     navigate(`/event/${eventId}`);
@@ -68,7 +77,7 @@ const Home = () => {
       <S.Title>Join a Tech Talk?</S.Title>
       <S.CenterContainer hasBackground>
         <Input.Group compact>
-          <S.SearchInput placeholder="Enter your TechTalk ID" onChange={handleOnChangeEventId} />
+          <S.SearchInput placeholder="Enter your TechTalk ID" onChange={handleOnChangeEventId}/>
           <Button type="primary" onClick={handleGoToEvent}>Go</Button>
         </Input.Group>
       </S.CenterContainer>
@@ -79,18 +88,30 @@ const Home = () => {
       <S.CenterContainer hasBackground>
         <S.Form
           layout="horizontal"
+          form={form}
+          onFinish={onFinish}
         >
-          <Form.Item label="Name">
+          <Form.Item name="name" label="Name"
+                     rules={[{required: true, message: 'Please enter event name'}]}>
             <Input placeholder="e.g. Web3 Tech Talk"/>
           </Form.Item>
-          <Form.Item label="Max Tickets">
+          <Form.Item name="maxTickets" label="Max Tickets"
+                     rules={[
+                       {type: 'number', message: 'Please enter number'},
+                       {required: true, message: 'Please enter max tickets'}
+                     ]}>
             <InputNumber placeholder="e.g. 10"/>
           </Form.Item>
-          <Form.Item label="Start Time" extra="Tickets are not available for sold after the start time.">
-            <DatePicker showTime="HH:mm" onOk={() => {}} placeholder="Select start time" />
+          <Form.Item name="startTime" label="Start Time"
+                     extra="Tickets are not available for sold after the start time."
+                     rules={[
+                       {required: true, message: 'Please enter start time'}
+                     ]}>
+            <DatePicker showTime="HH:mm" onOk={() => {
+            }} placeholder="Select start time"/>
           </Form.Item>
-          <Form.Item style={{ textAlign: 'center', paddingTop: 4 }}>
-            <Button type="primary" htmlType="submit">Create (Cost&nbsp;<Token val={10 * (10 ** 18)}/>)</Button>
+          <Form.Item style={{textAlign: 'center', paddingTop: 4}}>
+            <Button type="primary" htmlType="submit">Create (Cost&nbsp;<Token val={eventCreationFee}/>)</Button>
           </Form.Item>
         </S.Form>
       </S.CenterContainer>

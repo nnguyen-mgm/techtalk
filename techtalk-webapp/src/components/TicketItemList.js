@@ -1,8 +1,9 @@
-import { useCallback, useMemo, useState } from 'react';
-import { Button, List, Modal } from 'antd';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Button, List, Modal, Spin } from 'antd';
 import { ContainerOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
 import QRCode from 'react-qr-code';
+import useTechTalkService from '../hooks/useTechTalkService';
 
 const S = {
   ItemList: styled(List.Item)`
@@ -17,13 +18,36 @@ const S = {
 }
 
 const TicketItemList = ({ ticketId, checkedIn }) => {
+  const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [qrValue, setQrValue] = useState(null);
+  const {getCheckInCode} = useTechTalkService();
+
   const handleShowModal = useCallback(() => {
     setModalVisible(true);
   }, []);
+
   const handleCloseModal = useCallback(() => {
     setModalVisible(false);
   }, []);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      const checkInCode = await getCheckInCode(ticketId);
+      setQrValue(JSON.stringify({
+        ticketId,
+        checkInCode
+      }));
+      setLoading(false);
+    })();
+  }, [ticketId, getCheckInCode]);
+
+  useEffect(() => {
+    if (checkedIn) {
+      handleCloseModal();
+    }
+  }, [checkedIn, handleCloseModal]);
 
   const actions = useMemo(() => {
     if (checkedIn) {
@@ -46,10 +70,17 @@ const TicketItemList = ({ ticketId, checkedIn }) => {
         footer={null}
       >
         <center>
-          <QRCode value="hey" />
-          <br/>
-          <br/>
-          <h3>Please show this QR Code to the event creator</h3>
+          {(!qrValue || loading) && (
+            <Spin />
+          )}
+          {(qrValue && !loading) && (
+            <>
+              <QRCode value={qrValue} />
+              <br/>
+              <br/>
+              <h3>Please show this QR Code to the event creator</h3>
+            </>
+          )}
         </center>
       </Modal>
     </S.ItemList>

@@ -1,14 +1,19 @@
 import { Button } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { useCallback, useEffect, useState } from 'react';
+import useTechTalkService from '../hooks/useTechTalkService';
 
 function CreatedEventsLabel() {
   const [createdEvents, setCreatedEvents] = useState(0);
   const navigate = useNavigate();
+  const {loadCreatedEventIds} = useTechTalkService();
 
   useEffect(() => {
-    setCreatedEvents(0);
-  }, []);
+    (async () => {
+      const eventIds = await loadCreatedEventIds() || [];
+      setCreatedEvents(eventIds.length);
+    })();
+  }, [loadCreatedEventIds]);
 
   const handleOnViewMyEvents = useCallback(() => {
     navigate('/created-events');
